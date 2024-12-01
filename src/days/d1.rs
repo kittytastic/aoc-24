@@ -1,5 +1,5 @@
 use crate::utils::utils::get_input_file;
-use std::collections::BinaryHeap;
+use std::collections::{BinaryHeap, HashMap};
 
 pub fn day1_main(_second_part: bool, _extra_args: &Vec<String>){
     let input_file_str = get_input_file("d1.txt");
@@ -11,7 +11,7 @@ pub fn day1_main(_second_part: bool, _extra_args: &Vec<String>){
     let mut col1_heap:BinaryHeap<i32> = BinaryHeap::new();
     let mut col2_heap:BinaryHeap<i32> = BinaryHeap::new();
 
-    for line in split_input{
+    for line in split_input.iter(){
         col1_heap.push(line[0].parse().expect("Should be num"));
         col2_heap.push(line[1].parse().expect("Should be num"));
     }
@@ -25,4 +25,17 @@ pub fn day1_main(_second_part: bool, _extra_args: &Vec<String>){
         distance += (c1_val - c2_val).abs()
     }
     println!("Part 1 answer: {}", distance);
+
+    // Part 2
+    let mut col2_lookup:HashMap<i32, i32> = HashMap::new();
+    let mut col1_values:Vec<i32> = Vec::new();
+    for line in split_input{
+        col1_values.push(line[0].parse().expect("Should be num"));
+        let c2_val:i32 = line[1].parse().expect("Should be num");
+        col2_lookup.entry(c2_val).and_modify(|v|*v+=1).or_insert(1);
+    }
+
+    let sim_score:i32 = col1_values.iter().map(|v| v*col2_lookup.get(v).cloned().unwrap_or_default()).sum();
+
+    println!("Part 2 answer: {}", sim_score);
 }
