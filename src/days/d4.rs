@@ -15,7 +15,7 @@ pub fn part1(grid: &Grid<char>){
     
     for y in 0..grid.height(){
         for x in 0..grid.width(){
-            let point = grid.at(x, y).expect("In bounds");
+            let point = grid.get_point(x, y).expect("In bounds");
             if slice_is_xmas(point.right_slice(4)){match_count+=1}
             if slice_is_xmas(point.down_slice(4)){match_count+=1}
             if slice_is_xmas(point.down_right_slice(4)){match_count+=1}
@@ -44,7 +44,7 @@ fn part2(grid: &Grid<char>){
     
     for y in 0..grid.height(){
         for x in 0..grid.width(){
-            let point = grid.at(x, y).expect("In bounds");
+            let point = grid.get_point(x, y).expect("In bounds");
             if point_is_xmas(&point){match_count+=1}
         }
     }

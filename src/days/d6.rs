@@ -49,13 +49,13 @@ fn part2(input: &str){
     for y in 0..grid.height(){
         println!("y: {}", y);
         for x in 0..grid.width(){
-            let v = grid.at(x,y).expect("Inbounds").value().clone();
+            let v = grid.get_point(x,y).expect("Inbounds").value().clone();
             if v == '#' || v == '^' {continue;}
-            grid.set_val_at('#', x, y);
+            grid.set(x, y, '#');
             if does_grid_loop(&grid){
                 loop_count +=1
             }
-            grid.set_val_at('.', x, y);
+            grid.set(x, y, '.');
         }
     }
     println!("Answer to part 2: {}", loop_count);

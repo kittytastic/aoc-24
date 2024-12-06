@@ -1,5 +1,5 @@
 use std::path::Path;
-use std::fs;
+use std::{fs, usize};
 
 // Read an input file from the input data directory
 pub fn get_input_file(file_name: &str) -> String{
@@ -46,10 +46,15 @@ pub struct Grid<T> {
 }
 
 #[derive(Clone)]
+pub struct Point {
+    x: usize,
+    y: usize,
+}
+
+#[derive(Clone)]
 pub struct GridPoint<'a, T>{
     grid: &'a Grid<T>,
-    x: usize,
-    y: usize
+    point: Point
 }
 
 impl Grid<char>{
@@ -68,7 +73,7 @@ impl<T> Grid<T>{
         let height = data.len();
         Self {data, height, width}
     }
-
+    
     pub fn height(&self)->usize{
         self.height
     }
@@ -77,28 +82,38 @@ impl<T> Grid<T>{
         self.width
     }
 
-    pub fn at<'a>(&'a self, x:usize, y:usize) -> Option<GridPoint<'a, T>> {
+    pub fn get(&self, x:usize, y:usize)->&T{
+        &self.data[y][x] 
+    }
+
+    pub fn get_mut(&mut self, x:usize, y:usize)->&mut T{
+        &mut self.data[y][x] 
+    }
+
+    pub fn set(&mut self, x:usize, y: usize, value: T) {
+        self.data[y][x] = value
+    }
+
+    pub fn get_point<'a>(&'a self, x:usize, y:usize) -> Option<GridPoint<'a, T>> {
         if x>=self.width {return None;}
         if y>=self.height {return None;}
-        Some(GridPoint {grid: &self, x, y})
+        Some(GridPoint {grid: &self, point: Point{x, y}})
     }
 
     pub fn set_val_at_foreign_point<'a, S>(&mut self, value: T, point: &GridPoint<'a, S>)->Result<(), ()>{
-        if point.x > self.width{return Err(())}
-        if point.y > self.height{return Err(())}
-        self.data[point.y][point.x] = value;
+        if point.get_x() > self.width{return Err(())}
+        if point.get_y() > self.height{return Err(())}
+        *self.get_mut(point.get_x(), point.get_y()) = value;
         Ok(())
     }
     
     pub fn get_val_at_foreign_point<'a, S>(&self, point: &GridPoint<'a, S>)->Result<&T, ()>{
-        if point.x > self.width{return Err(())}
-        if point.y > self.height{return Err(())}
-        Ok(&self.data[point.y][point.x])
+        if point.get_x() > self.width{return Err(())}
+        if point.get_y() > self.height{return Err(())}
+        Ok(&self.get(point.get_x(), point.get_y()))
     }
 
-    pub fn set_val_at(&mut self, value: T, x:usize, y:usize){
-        self.data[y][x] = value;
-    }
+    
 }
 
 impl<T: Clone> Grid<T>{
@@ -110,10 +125,10 @@ impl<T: Clone> Grid<T>{
 
 impl<T: Eq> Grid<T>{
     pub fn find_first_occurrence(&self, look_for: &T)->Option<GridPoint<T>>{
-        for y in 0..self.height{
-            for x in 0..self.width{
-                if self.data[y][x] == *look_for{
-                    return Some(GridPoint{grid: &self, x, y})
+        for y in 0..self.height(){
+            for x in 0..self.width(){
+                if *self.get(x, y) == *look_for{
+                    return Some(GridPoint{grid: &self, point: Point{x, y}})
                 }
             }
         }
@@ -122,9 +137,9 @@ impl<T: Eq> Grid<T>{
     
     pub fn count_all_occurrence_of(&self, look_for: &T)->usize{
         let mut c = 0;
-        for y in 0..self.height{
-            for x in 0..self.width{
-                if self.data[y][x] == *look_for{
+        for y in 0..self.height(){
+            for x in 0..self.width(){
+                if *self.get(x, y) == *look_for{
                     c+=1;
                 }
             }
@@ -137,7 +152,7 @@ impl<T: std::fmt::Display> std::fmt::Display for Grid<T>{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for y in 0..self.height{
             for x in 0..self.width{
-                write!(f, "{}", self.data[y][x])?
+                write!(f, "{}", self.get(x, y))?
             }
             writeln!(f, "")?
         }
@@ -145,53 +160,161 @@ impl<T: std::fmt::Display> std::fmt::Display for Grid<T>{
     }
 }
 
+impl Point{
+    pub fn get_x(&self)->usize{
+        self.x
+    }
+
+    pub fn get_y(&self)->usize{
+        self.y
+    }
+
+    pub fn left(&self, width: usize, height: usize) -> Option<Point>{
+        self.left_by(1 ,width, height)
+    }
+
+    pub fn right(&self, width: usize, height: usize) -> Option<Point> {
+        self.right_by(1 ,width, height)
+    }
+
+    pub fn up(&self, width: usize, height: usize) -> Option<Point> {
+        self.up_by(1 ,width, height)
+    }
+
+    pub fn down(&self, width: usize, height: usize) -> Option<Point> {
+        self.down_by(1 ,width, height)
+    }
+    
+    pub fn up_left(&self, width: usize, height: usize) -> Option<Point>{
+        self.up_left_by(1 ,width, height)
+    }
+
+    pub fn up_right(&self, width: usize, height: usize) -> Option<Point> {
+        self.up_right_by(1 ,width, height)
+    }
+
+    pub fn down_left(&self, width: usize, height: usize) -> Option<Point> {
+        self.down_left_by(1 ,width, height)
+    }
+
+    pub fn down_right(&self, width: usize, height: usize) -> Option<Point> {
+        self.down_right_by(1 ,width, height)
+    }
+    
+    pub fn left_by(&self, step: usize, _width: usize, _height: usize) -> Option<Point>{
+        if self.x < step {return None}
+        Some(Point{x: self.x-step, y:self.y})
+    }
+
+    pub fn right_by(&self, step: usize, width: usize, _height: usize) -> Option<Point> {
+        if self.x + step >= width{return None}
+        Some(Self{x: self.x+step, y: self.y})
+    }
+
+    pub fn up_by(&self, step: usize, _width: usize, _height: usize) -> Option<Point> {
+        if self.y < step {return None}
+        Some(Self{x: self.x, y: self.y-step})
+    }
+
+    pub fn down_by(&self, step: usize, _width: usize, height: usize) -> Option<Point> {
+        if self.y + step >= height{return None}
+        Some(Self{x: self.x, y: self.y+step})
+    }
+    
+    pub fn up_left_by(&self, step: usize, _width: usize, _height: usize) -> Option<Point>{
+        if self.x < step {return None}
+        if self.y < step {return None}
+        Some(Self{x: self.x-step, y: self.y-step})
+    }
+
+    pub fn up_right_by(&self, step: usize, width: usize, _height: usize) -> Option<Point> {
+        if self.x + step >= width{return None}
+        if self.y < step {return None}
+        Some(Self{x: self.x+step, y: self.y-step})
+    }
+
+    pub fn down_left_by(&self, step: usize, _width: usize, height: usize) -> Option<Point> {
+        if self.y + step >= height{return None}
+        if self.x < step {return None}
+        Some(Self{x: self.x-step, y: self.y+step})
+    }
+
+    pub fn down_right_by(&self, step: usize, width: usize, height: usize) -> Option<Point> {
+        if self.y + step >= height {return None}
+        if self.x + step  >= width {return None}
+        Some(Self{x: self.x+step, y: self.y+step})
+    }
+
+    pub fn step_direction(&self, dir: Direction, width: usize, height: usize)->Option<Point>{
+        match dir{
+            Direction::Up => self.up(width, height),
+            Direction::Right => self.right(width, height),
+            Direction::Down => self.down(width, height),
+            Direction::Left => self.left(width, height),
+            Direction::UpRight => self.up_right(width, height),
+            Direction::DownRight => self.down_right(width, height),
+            Direction::DownLeft => self.down_left(width, height),
+            Direction::UpLeft => self.up_left(width, height),
+        }
+    }
+    
+    pub fn step_direction_by(&self, dir: Direction, step: usize, width: usize, height: usize)->Option<Point>{
+        match dir{
+            Direction::Up => self.up_by(step, width, height),
+            Direction::Right => self.right_by(step, width, height),
+            Direction::Down => self.down_by(step, width, height),
+            Direction::Left => self.left_by(step, width, height),
+            Direction::UpRight => self.up_right_by(step, width, height),
+            Direction::DownRight => self.down_right_by(step, width, height),
+            Direction::DownLeft => self.down_left_by(step, width, height),
+            Direction::UpLeft => self.up_left_by(step, width, height),
+        }
+    }
+}
+
 impl<'a, T> GridPoint<'a, T>{
     pub fn value(&'a self) -> &'a T{
-        &self.grid.data[self.y][self.x]
-    } 
+        &self.grid.get(self.point.get_x(), self.point.get_y())
+    }
+
+    pub fn get_x(&self)->usize{
+       self.point.get_x() 
+    }
+    
+    pub fn get_y(&self)->usize{
+       self.point.get_y()
+    }
 
     pub fn left(&self) -> Option<GridPoint<'a, T>>{
-        if self.x == 0 {return None}
-        self.grid.at(self.x-1, self.y)
+        self.point.left(self.grid.width(), self.grid.height()).map(|p|GridPoint { grid: &self.grid, point: p })        
     }
 
     pub fn right(&self) -> Option<GridPoint<'a, T>> {
-        if self.x == self.grid.width-1{return None}
-        self.grid.at(self.x+1, self.y)
+        self.point.right(self.grid.width(), self.grid.height()).map(|p|GridPoint { grid: &self.grid, point: p })        
     }
 
     pub fn up(&self) -> Option<GridPoint<'a, T>> {
-        if self.y == 0 {return None}
-        self.grid.at(self.x, self.y-1)
+        self.point.up(self.grid.width(), self.grid.height()).map(|p|GridPoint { grid: &self.grid, point: p })        
     }
 
     pub fn down(&self) -> Option<GridPoint<'a, T>> {
-        if self.y == self.grid.height-1{return None}
-        self.grid.at(self.x, self.y+1)
+        self.point.down(self.grid.width(), self.grid.height()).map(|p|GridPoint { grid: &self.grid, point: p })        
     }
     
     pub fn up_left(&self) -> Option<GridPoint<'a, T>>{
-        if self.x == 0 {return None}
-        if self.y == 0 {return None}
-        self.grid.at(self.x-1, self.y-1)
+        self.point.up_left(self.grid.width(), self.grid.height()).map(|p|GridPoint { grid: &self.grid, point: p })        
     }
 
     pub fn up_right(&self) -> Option<GridPoint<'a, T>> {
-        if self.x == self.grid.width-1{return None}
-        if self.y == 0 {return None}
-        self.grid.at(self.x+1, self.y-1)
+        self.point.up_right(self.grid.width(), self.grid.height()).map(|p|GridPoint { grid: &self.grid, point: p })        
     }
 
     pub fn down_left(&self) -> Option<GridPoint<'a, T>> {
-        if self.y == self.grid.height-1{return None}
-        if self.x == 0 {return None}
-        self.grid.at(self.x-1, self.y+1)
+        self.point.down_left(self.grid.width(), self.grid.height()).map(|p|GridPoint { grid: &self.grid, point: p })        
     }
 
     pub fn down_right(&self) -> Option<GridPoint<'a, T>> {
-        if self.y == self.grid.height-1{return None}
-        if self.x == self.grid.width-1{return None}
-        self.grid.at(self.x+1, self.y+1)
+        self.point.down_right(self.grid.width(), self.grid.height()).map(|p|GridPoint { grid: &self.grid, point: p })        
     }
 
     pub fn step_direction(&self, dir: Direction)->Option<GridPoint<'a, T>>{
@@ -210,31 +333,31 @@ impl<'a, T> GridPoint<'a, T>{
 
 impl<'a, T:Clone> GridPoint<'a, T>{
     pub fn right_slice(&self, slice_len: usize) -> Option<Vec<T>> {
-        if self.x > self.grid.width-slice_len{return None}
-        Some((0..slice_len).into_iter().map(|d|{self.grid.data[self.y][self.x+d].clone()}).collect::<Vec<T>>())
+        if self.point.get_x() > self.grid.width()-slice_len{return None}
+        Some((0..slice_len).into_iter().map(|d|{self.grid.get(self.point.get_x()+d, self.point.get_y()).clone()}).collect::<Vec<T>>())
     }
     
     pub fn down_slice(&self, slice_len: usize) -> Option<Vec<T>> {
-        if self.y > self.grid.height-slice_len{return None}
-        Some((0..slice_len).into_iter().map(|d|{self.grid.data[self.y+d][self.x].clone()}).collect::<Vec<T>>())
+        if self.get_y() > self.grid.height()-slice_len{return None}
+        Some((0..slice_len).into_iter().map(|d|{self.grid.get(self.get_x(), self.get_y()+d).clone()}).collect::<Vec<T>>())
     }
     
     pub fn down_right_slice(&self, slice_len: usize) -> Option<Vec<T>> {
-        if self.y > self.grid.height-slice_len{return None}
-        if self.x > self.grid.width-slice_len{return None}
-        Some((0..slice_len).into_iter().map(|d|{self.grid.data[self.y+d][self.x+d].clone()}).collect::<Vec<T>>())
+        if self.get_y() > self.grid.height()-slice_len{return None}
+        if self.get_x() > self.grid.width()-slice_len{return None}
+        Some((0..slice_len).into_iter().map(|d|{self.grid.get(self.get_x()+d, self.get_y()+d).clone()}).collect::<Vec<T>>())
     }
     
     pub fn down_left_slice(&self, slice_len: usize) -> Option<Vec<T>> {
-        if self.y > self.grid.height-slice_len{return None}
-        if self.x < slice_len-1{return None}
-        Some((0..slice_len).into_iter().map(|d|{self.grid.data[self.y+d][self.x-d].clone()}).collect::<Vec<T>>())
+        if self.get_y() > self.grid.height()-slice_len{return None}
+        if self.get_x() < slice_len-1{return None}
+        Some((0..slice_len).into_iter().map(|d|{self.grid.get(self.get_x()-d, self.get_y()+d).clone()}).collect::<Vec<T>>())
     }
 } 
 
 impl<'a, T: std::fmt::Display> std::fmt::Display for GridPoint<'a, T>{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({}, {})", self.x, self.y)
+        write!(f, "({}, {})", self.get_x(), self.get_y())
     }
 }
 

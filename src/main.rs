@@ -10,7 +10,9 @@ fn main() {
     let cli = Cli::parse();
     println!("--------- AOC 24 ---------");
     println!("Day: {}  Part: {}", cli.day, if cli.part2 {"2"}else{"1"});
-
+    
+    use std::time::Instant;
+    let now = Instant::now();
     match cli.day {
         1 => crate::days::d1::day1_main(cli.part2, &cli.extra_args),
         2 => crate::days::d2::day2_main(cli.part2, &cli.extra_args),
@@ -39,4 +41,6 @@ fn main() {
         25 => crate::days::d25::day25_main(cli.part2, &cli.extra_args),
         _ => unreachable!("Unknown day: {}", cli.day)
     }
+    let elapsed = now.elapsed();
+    println!("Elapsed: {:.2?}", elapsed);
 }
