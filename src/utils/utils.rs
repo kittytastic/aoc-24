@@ -12,6 +12,32 @@ pub fn get_input_file(file_name: &str) -> String{
     return fs::read_to_string(path).expect("Should be able to read file");
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Direction {
+    Up,
+    UpRight,
+    Right,
+    DownRight,
+    Down,
+    DownLeft,
+    Left,
+    UpLeft,
+}
+
+impl Direction {
+    pub fn turn_90_clockwise(&self)->Direction{
+        match self{
+            Direction::Up => Direction::Right,
+            Direction::Right => Direction::Down,
+            Direction::Down => Direction::Left,
+            Direction::Left => Direction::Up,
+            Direction::UpRight => Direction::DownRight,
+            Direction::DownRight => Direction::DownLeft,
+            Direction::DownLeft => Direction::UpLeft,
+            Direction::UpLeft => Direction::UpRight,
+        }
+    }
+}
 
 pub struct Grid<T> {
     data: Vec<Vec<T>>,
@@ -19,6 +45,7 @@ pub struct Grid<T> {
     width: usize
 }
 
+#[derive(Clone)]
 pub struct GridPoint<'a, T>{
     grid: &'a Grid<T>,
     x: usize,
@@ -54,7 +81,68 @@ impl<T> Grid<T>{
         if x>=self.width {return None;}
         if y>=self.height {return None;}
         Some(GridPoint {grid: &self, x, y})
-    } 
+    }
+
+    pub fn set_val_at_foreign_point<'a, S>(&mut self, value: T, point: &GridPoint<'a, S>)->Result<(), ()>{
+        if point.x > self.width{return Err(())}
+        if point.y > self.height{return Err(())}
+        self.data[point.y][point.x] = value;
+        Ok(())
+    }
+    
+    pub fn get_val_at_foreign_point<'a, S>(&self, point: &GridPoint<'a, S>)->Result<&T, ()>{
+        if point.x > self.width{return Err(())}
+        if point.y > self.height{return Err(())}
+        Ok(&self.data[point.y][point.x])
+    }
+
+    pub fn set_val_at(&mut self, value: T, x:usize, y:usize){
+        self.data[y][x] = value;
+    }
+}
+
+impl<T: Clone> Grid<T>{
+    pub fn new_from(value: T, height: usize, width: usize)->Self{
+        let data: Vec<Vec<T>> = (0..height).map(|_|{(0..width).map(|_|value.clone()).collect()}).collect();
+        Self{data, height, width}
+    }
+}
+
+impl<T: Eq> Grid<T>{
+    pub fn find_first_occurrence(&self, look_for: &T)->Option<GridPoint<T>>{
+        for y in 0..self.height{
+            for x in 0..self.width{
+                if self.data[y][x] == *look_for{
+                    return Some(GridPoint{grid: &self, x, y})
+                }
+            }
+        }
+        None
+    }
+    
+    pub fn count_all_occurrence_of(&self, look_for: &T)->usize{
+        let mut c = 0;
+        for y in 0..self.height{
+            for x in 0..self.width{
+                if self.data[y][x] == *look_for{
+                    c+=1;
+                }
+            }
+        }
+        c
+    }
+}
+
+impl<T: std::fmt::Display> std::fmt::Display for Grid<T>{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for y in 0..self.height{
+            for x in 0..self.width{
+                write!(f, "{}", self.data[y][x])?
+            }
+            writeln!(f, "")?
+        }
+        writeln!(f, "height: {}  width: {}", self.height, self.width)
+    }
 }
 
 impl<'a, T> GridPoint<'a, T>{
@@ -62,48 +150,61 @@ impl<'a, T> GridPoint<'a, T>{
         &self.grid.data[self.y][self.x]
     } 
 
-    pub fn _left(&self) -> Option<GridPoint<T>>{
+    pub fn left(&self) -> Option<GridPoint<'a, T>>{
         if self.x == 0 {return None}
         self.grid.at(self.x-1, self.y)
     }
 
-    pub fn _right(&self) -> Option<GridPoint<T>> {
+    pub fn right(&self) -> Option<GridPoint<'a, T>> {
         if self.x == self.grid.width-1{return None}
         self.grid.at(self.x+1, self.y)
     }
 
-    pub fn _up(&self) -> Option<GridPoint<T>> {
+    pub fn up(&self) -> Option<GridPoint<'a, T>> {
         if self.y == 0 {return None}
         self.grid.at(self.x, self.y-1)
     }
 
-    pub fn _down(&self) -> Option<GridPoint<T>> {
+    pub fn down(&self) -> Option<GridPoint<'a, T>> {
         if self.y == self.grid.height-1{return None}
         self.grid.at(self.x, self.y+1)
     }
     
-    pub fn up_left(&self) -> Option<GridPoint<T>>{
+    pub fn up_left(&self) -> Option<GridPoint<'a, T>>{
         if self.x == 0 {return None}
         if self.y == 0 {return None}
         self.grid.at(self.x-1, self.y-1)
     }
 
-    pub fn up_right(&self) -> Option<GridPoint<T>> {
+    pub fn up_right(&self) -> Option<GridPoint<'a, T>> {
         if self.x == self.grid.width-1{return None}
         if self.y == 0 {return None}
         self.grid.at(self.x+1, self.y-1)
     }
 
-    pub fn down_left(&self) -> Option<GridPoint<T>> {
+    pub fn down_left(&self) -> Option<GridPoint<'a, T>> {
         if self.y == self.grid.height-1{return None}
         if self.x == 0 {return None}
         self.grid.at(self.x-1, self.y+1)
     }
 
-    pub fn down_right(&self) -> Option<GridPoint<T>> {
+    pub fn down_right(&self) -> Option<GridPoint<'a, T>> {
         if self.y == self.grid.height-1{return None}
         if self.x == self.grid.width-1{return None}
         self.grid.at(self.x+1, self.y+1)
+    }
+
+    pub fn step_direction(&self, dir: Direction)->Option<GridPoint<'a, T>>{
+        match dir{
+            Direction::Up => self.up(),
+            Direction::Right => self.right(),
+            Direction::Down => self.down(),
+            Direction::Left => self.left(),
+            Direction::UpRight => self.up_right(),
+            Direction::DownRight => self.down_right(),
+            Direction::DownLeft => self.down_left(),
+            Direction::UpLeft => self.up_left(),
+        }
     }
 }
 
@@ -131,6 +232,11 @@ impl<'a, T:Clone> GridPoint<'a, T>{
     }
 } 
 
+impl<'a, T: std::fmt::Display> std::fmt::Display for GridPoint<'a, T>{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
+    }
+}
 
 
 #[cfg(test)]
