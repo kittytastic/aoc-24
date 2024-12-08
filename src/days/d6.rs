@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::utils::utils::{get_input_file, Direction, Grid, GridPoint};
+use crate::utils::utils::{get_input_file, Direction, Grid};
 pub fn day6_main(second_part: bool, _extra_args: &Vec<String>){
     let input_file_str = get_input_file("d6.txt");
     if second_part {
