@@ -45,7 +45,7 @@ pub struct Grid<T> {
     width: usize
 }
 
-#[derive(Clone)]
+#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct Point {
     x: usize,
     y: usize,
@@ -161,6 +161,10 @@ impl<T: std::fmt::Display> std::fmt::Display for Grid<T>{
 }
 
 impl Point{
+    pub fn new(x:usize, y:usize)->Self{
+        Point { x, y }
+    }
+
     pub fn get_x(&self)->usize{
         self.x
     }
@@ -245,7 +249,7 @@ impl Point{
         Some(Self{x: self.x+step, y: self.y+step})
     }
 
-    pub fn step_direction(&self, dir: Direction, width: usize, height: usize)->Option<Point>{
+    pub fn _step_direction(&self, dir: Direction, width: usize, height: usize)->Option<Point>{
         match dir{
             Direction::Up => self.up(width, height),
             Direction::Right => self.right(width, height),
@@ -258,7 +262,7 @@ impl Point{
         }
     }
     
-    pub fn step_direction_by(&self, dir: Direction, step: usize, width: usize, height: usize)->Option<Point>{
+    pub fn _step_direction_by(&self, dir: Direction, step: usize, width: usize, height: usize)->Option<Point>{
         match dir{
             Direction::Up => self.up_by(step, width, height),
             Direction::Right => self.right_by(step, width, height),
@@ -269,6 +273,29 @@ impl Point{
             Direction::DownLeft => self.down_left_by(step, width, height),
             Direction::UpLeft => self.up_left_by(step, width, height),
         }
+    }
+
+    pub fn move_by(&self, d_x: i64, d_y: i64, width: usize, height: usize)->Option<Point>{
+        let self_x_i64:i64 = self.x.try_into().expect("Nice numbers");
+        let self_y_i64:i64 = self.y.try_into().expect("Nice numbers");
+        
+        let new_x: i64 = self_x_i64 + d_x;
+        let new_y: i64 = self_y_i64 + d_y;
+
+        if new_x<0 || new_x>=width.try_into().expect("Nice numbers"){return None}
+        if new_y<0 || new_y>=height.try_into().expect("Nice numbers"){return None}
+
+        Some(Point{x: new_x.try_into().expect("Nice numbers"), y:new_y.try_into().expect("Nice numbers")})
+    }
+
+    pub fn to_i64(&self)->(i64, i64){
+        (self.x.try_into().expect("Nice numbers"), self.y.try_into().expect("Nice numbers"))
+    }
+
+    pub fn delta(&self, other: &Self)->(i64, i64){
+        let (self_x, self_y) = self.to_i64();
+        let (other_x, other_y) = other.to_i64();
+        (self_x-other_x, self_y-other_y)
     }
 }
 
@@ -356,6 +383,12 @@ impl<'a, T:Clone> GridPoint<'a, T>{
 } 
 
 impl<'a, T: std::fmt::Display> std::fmt::Display for GridPoint<'a, T>{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({}, {})", self.get_x(), self.get_y())
+    }
+}
+
+impl std::fmt::Display for Point{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({}, {})", self.get_x(), self.get_y())
     }
