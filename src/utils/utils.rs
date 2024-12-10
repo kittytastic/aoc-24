@@ -113,6 +113,9 @@ impl<T> Grid<T>{
         Ok(&self.get(point.get_x(), point.get_y()))
     }
 
+    pub fn at_point(&self, point: &Point)->&T{
+        self.get(point.get_x(), point.get_y())
+    }
     
 }
 
@@ -249,7 +252,7 @@ impl Point{
         Some(Self{x: self.x+step, y: self.y+step})
     }
 
-    pub fn _step_direction(&self, dir: Direction, width: usize, height: usize)->Option<Point>{
+    pub fn step_direction(&self, dir: Direction, width: usize, height: usize)->Option<Point>{
         match dir{
             Direction::Up => self.up(width, height),
             Direction::Right => self.right(width, height),
