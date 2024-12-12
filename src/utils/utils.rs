@@ -12,7 +12,7 @@ pub fn get_input_file(file_name: &str) -> String{
     return fs::read_to_string(path).expect("Should be able to read file");
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum Direction {
     Up,
     UpRight,
@@ -35,6 +35,58 @@ impl Direction {
             Direction::DownRight => Direction::DownLeft,
             Direction::DownLeft => Direction::UpLeft,
             Direction::UpLeft => Direction::UpRight,
+        }
+    }
+    
+    pub fn turn_90_anticlockwise(&self)->Direction{
+        match self{
+            Direction::Up => Direction::Left,
+            Direction::Left => Direction::Down,
+            Direction::Down => Direction::Right,
+            Direction::Right => Direction::Up,
+            Direction::UpRight => Direction::UpLeft,
+            Direction::UpLeft => Direction::DownLeft,
+            Direction::DownLeft => Direction::DownRight,
+            Direction::DownRight => Direction::UpRight,
+        }
+    }
+    
+    pub fn turn_180(&self)->Direction{
+        match self{
+            Direction::Up => Direction::Down,
+            Direction::Right => Direction::Left,
+            Direction::Down => Direction::Up,
+            Direction::Left => Direction::Right,
+            Direction::UpRight => Direction::DownLeft,
+            Direction::DownLeft => Direction::UpRight,
+            Direction::DownRight => Direction::UpLeft,
+            Direction::UpLeft => Direction::DownRight,
+        }
+    }
+    
+    pub fn turn_45_clockwise(&self)->Direction{
+        match self{
+            Direction::Up => Direction::UpRight,
+            Direction::UpRight => Direction::Right,
+            Direction::Right => Direction::DownRight,
+            Direction::DownRight => Direction::Down,
+            Direction::Down => Direction::DownLeft,
+            Direction::DownLeft => Direction::Left,
+            Direction::Left => Direction::UpLeft,
+            Direction::UpLeft => Direction::Up,
+        }
+    }
+    
+    pub fn turn_45_anticlockwise(&self)->Direction{
+        match self{
+            Direction::Up => Direction::UpLeft,
+            Direction::UpLeft => Direction::Left,
+            Direction::Left => Direction::DownLeft,
+            Direction::DownLeft => Direction::Down,
+            Direction::Down => Direction::DownRight,
+            Direction::DownRight => Direction::Right,
+            Direction::Right => Direction::UpRight,
+            Direction::UpRight => Direction::Up,
         }
     }
 }
