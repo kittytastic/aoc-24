@@ -122,7 +122,7 @@ fn count_corners(boundaries: &mut HashSet<(Point, Direction)>, grid: &Grid<i32>)
 }
 
 
-// Hmmmm.. I think this one would have worked, got a bug tbd. I'm undecided if I like it more than the other version
+// Hmmmm.. I think this one would have worked, got a bug. I'm undecided if I like it more than the other version
 /*fn walk_path(start_pos: &(Point, Direction), pos: &(Point, Direction), boundaries: &mut HashSet<(Point, Direction)>, grid: &Grid<char>)->usize{
     println!("Walking: {:?}", pos);
     boundaries.remove(pos);
