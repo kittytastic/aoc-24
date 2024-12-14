@@ -1,6 +1,6 @@
-use std::str::FromStr;
+use std::{collections::HashSet, str::FromStr};
 
-use crate::utils::utils::{get_input_file, Point};
+use crate::utils::utils::{get_input_file, Direction, Grid, Point};
 
 pub fn day14_main(_second_part: bool, _extra_args: &Vec<String>){
     let input_string = get_input_file("d14.txt");
@@ -26,6 +26,9 @@ pub fn day14_main(_second_part: bool, _extra_args: &Vec<String>){
     }
     let saftey_factor = quadrent_count.iter().cloned().reduce(|acc, e| acc*e).expect("value");
     println!("Answer to part 1: {}", saftey_factor);
+
+    // Part 2
+    part2(&input);
 }
 
 fn get_pair<T:FromStr>(s:&str)->(T, T){
@@ -65,4 +68,53 @@ fn place_in_quadrant(point: &Point, width: usize, height: usize)->Quadrent{
     }else{
         Quadrent::None
     }
+}
+
+fn get_grid_at(input: &Vec<((usize, usize), (i64, i64))>, seconds: i64, width: usize, height: usize)->Grid<char>{
+    let mut grid = Grid::new_from('.', height, width);
+    for ((x, y), (vx, vy)) in input.iter().cloned(){
+        let current_pos = Point::new(x, y);
+        let new_pos = current_pos.move_by_modulo(vx*seconds, vy*seconds, width, height);
+        grid.set(new_pos.get_x(), new_pos.get_y(), 'X');
+    };
+    grid
+}
+
+fn count_neighbours(input: &Vec<((usize, usize), (i64, i64))>, seconds: i64, width: usize, height: usize)->usize{
+    let mut seen: HashSet<Point> = HashSet::new();
+    let mut neighbour_count = 0;
+    for ((x, y), (vx, vy)) in input.iter().cloned(){
+        let current_pos = Point::new(x, y);
+        let new_pos = current_pos.move_by_modulo(vx*seconds, vy*seconds, width, height);
+        seen.insert(new_pos.clone());
+        for d in vec![Direction::Up, Direction::Left, Direction::Right, Direction::Down]{
+            if let Some(nn) = new_pos.step_direction(d, width, height){
+                if seen.contains(&nn){
+                    neighbour_count+=1
+                }
+            }
+        }
+    };
+    neighbour_count
+}
+
+fn part2(input: &Vec<((usize, usize), (i64, i64))>){
+    let height = 103;
+    let width = 101;
+    
+    let mut best_time = 0;
+    let mut best_count = 0;
+    for i in 0..101{
+        for j in 0..103{
+            let t = i*103 + j;
+            let c = count_neighbours(input, t, width, height);
+            if c > best_count{
+                best_count = c;
+                best_time = t;
+            }
+        }
+    }
+
+    println!("{}", get_grid_at(input, best_time, width, height));
+    println!("Answer to part 2: {}", best_time);
 }
