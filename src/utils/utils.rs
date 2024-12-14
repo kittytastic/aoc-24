@@ -342,6 +342,20 @@ impl Point{
 
         Some(Point{x: new_x.try_into().expect("Nice numbers"), y:new_y.try_into().expect("Nice numbers")})
     }
+     
+    pub fn move_by_modulo(&self, d_x: i64, d_y: i64, width: usize, height: usize)->Point{
+        let self_x_i64:i64 = self.x.try_into().expect("Nice numbers");
+        let self_y_i64:i64 = self.y.try_into().expect("Nice numbers");
+        let width_i64:i64 = width.try_into().expect("Nice numbers");
+        let height_i64:i64 = height.try_into().expect("Nice numbers");
+
+        let new_x: i64 = (self_x_i64 + d_x)%width_i64;
+        let new_y: i64 = (self_y_i64 + d_y)%height_i64;
+        let new_x = if new_x<0{width_i64+new_x}else{new_x};
+        let new_y = if new_y<0{height_i64+new_y}else{new_y};
+
+        Point{x: new_x.try_into().expect("Nice numbers"), y:new_y.try_into().expect("Nice numbers")}
+    }
 
     pub fn to_i64(&self)->(i64, i64){
         (self.x.try_into().expect("Nice numbers"), self.y.try_into().expect("Nice numbers"))
