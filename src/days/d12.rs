@@ -1,4 +1,4 @@
-use std::{collections::HashSet, f32::consts::E};
+use std::collections::HashSet;
 
 use crate::utils::utils::{get_input_file, Direction, Grid, Point};
 pub fn day12_main(_second_part: bool, _extra_args: &Vec<String>){

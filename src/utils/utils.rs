@@ -51,7 +51,7 @@ impl Direction {
         }
     }
     
-    pub fn turn_180(&self)->Direction{
+    pub fn _turn_180(&self)->Direction{
         match self{
             Direction::Up => Direction::Down,
             Direction::Right => Direction::Left,
