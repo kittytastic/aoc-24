@@ -1,5 +1,6 @@
 use std::path::Path;
 use std::{fs, usize};
+use regex::Regex;
 
 // Read an input file from the input data directory
 pub fn get_input_file(file_name: &str) -> String{
@@ -10,6 +11,11 @@ pub fn get_input_file(file_name: &str) -> String{
     }
 
     return fs::read_to_string(path).expect("Should be able to read file");
+}
+
+pub fn get_number_substr(in_str: &str)->Vec<&str>{
+    let re = Regex::new(r"-?\d+").expect("Valid regex expr");
+    re.find_iter(in_str).map(|m|{m.as_str()}).collect()
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]

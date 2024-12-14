@@ -1,12 +1,14 @@
-use std::{collections::HashSet, str::FromStr};
+use std::collections::HashSet;
 
-use crate::utils::utils::{get_input_file, Direction, Grid, Point};
+use crate::utils::utils::{get_input_file, Direction, Grid, Point, get_number_substr};
 
 pub fn day14_main(_second_part: bool, _extra_args: &Vec<String>){
     let input_string = get_input_file("d14.txt");
-    let input:Vec<((usize, usize), (i64, i64))> = input_string.lines().map(|l|{
-        let parts:Vec<&str> = l.split_ascii_whitespace().collect();
-        (get_pair::<usize>(parts[0]), get_pair::<i64>(parts[1]))
+
+    let input: Vec<((usize, usize), (i64, i64))> = input_string.lines().map(|l|{
+        let numbers = get_number_substr(l); 
+        ((numbers[0].parse().expect("Valid num"), numbers[1].parse().expect("Valid num")),
+         (numbers[2].parse().expect("Valid num"), numbers[3].parse().expect("Valid num")))
     }).collect();
 
     let seconds:i64 = 100;
@@ -31,12 +33,6 @@ pub fn day14_main(_second_part: bool, _extra_args: &Vec<String>){
     part2(&input);
 }
 
-fn get_pair<T:FromStr>(s:&str)->(T, T){
-    let ignore = &['=', 'p', 'v'];
-    let s = s.trim_matches(ignore);
-    let parts:Vec<&str> = s.split(',').collect();
-    (match parts[0].parse() {Ok(v) => v, Err(_) => panic!("p0 failed")}, match parts[1].parse() {Ok(v) => v, Err(_) => panic!("p1 failed")})
-}
 
 enum Quadrent{
     TopLeft,
