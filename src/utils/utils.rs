@@ -97,6 +97,7 @@ impl Direction {
     }
 }
 
+#[derive(Clone)]
 pub struct Grid<T> {
     data: Vec<Vec<T>>,
     height: usize,
@@ -157,7 +158,7 @@ impl<T> Grid<T>{
         if y>=self.height {return None;}
         Some(GridPoint {grid: &self, point: Point{x, y}})
     }
-
+    
     pub fn set_val_at_foreign_point<'a, S>(&mut self, value: T, point: &GridPoint<'a, S>)->Result<(), ()>{
         if point.get_x() > self.width{return Err(())}
         if point.get_y() > self.height{return Err(())}
@@ -175,6 +176,10 @@ impl<T> Grid<T>{
         self.get(point.get_x(), point.get_y())
     }
     
+    pub fn set_point(& mut self, point: &Point, value: T){
+        self.set(point.get_x(), point.get_y(), value); 
+    }
+    
 }
 
 impl<T: Clone> Grid<T>{
@@ -185,11 +190,22 @@ impl<T: Clone> Grid<T>{
 }
 
 impl<T: Eq> Grid<T>{
-    pub fn find_first_occurrence(&self, look_for: &T)->Option<GridPoint<T>>{
+    pub fn find_first_occurrence_bound(&self, look_for: &T)->Option<GridPoint<T>>{
         for y in 0..self.height(){
             for x in 0..self.width(){
                 if *self.get(x, y) == *look_for{
                     return Some(GridPoint{grid: &self, point: Point{x, y}})
+                }
+            }
+        }
+        None
+    }
+    
+    pub fn find_first_occurrence(&self, look_for: &T)->Option<Point>{
+        for y in 0..self.height(){
+            for x in 0..self.width(){
+                if *self.get(x, y) == *look_for{
+                    return Some(Point{x, y})
                 }
             }
         }

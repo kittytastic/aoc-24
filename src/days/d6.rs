@@ -16,7 +16,7 @@ fn part1(input: &str){
     let grid = Grid::new_from_str(&input);
 
     let mut visited = Grid::new_from('.', grid.height(), grid.width());
-    let start = grid.find_first_occurrence(&'^').expect("Should have start");
+    let start = grid.find_first_occurrence_bound(&'^').expect("Should have start");
     visited.set_val_at_foreign_point('X', &start).expect("Same size grids");
 
     let mut current_dir = Direction::Up;
@@ -62,7 +62,7 @@ fn part2(input: &str){
 }
 
 fn does_grid_loop<'a>(grid: &'a Grid<char>)->bool{
-    let start = grid.find_first_occurrence(&'^').expect("Should have start");
+    let start = grid.find_first_occurrence_bound(&'^').expect("Should have start");
     let mut visited = HashMap::<Direction, Grid<char>>::new();
     visited.insert(Direction::Up, Grid::new_from('.', grid.height(), grid.width()));
     visited.insert(Direction::Down, Grid::new_from('.', grid.height(), grid.width()));
